@@ -1,0 +1,170 @@
+import java.util.*;
+
+public class KisanRate {
+
+    // Milestone 1 (Week 1): Most traded crop
+    // Technique: Counting / Hashing | Time: O(n), Space: O(n) or O(maxId)
+    public static int[] mostTradedCrop(int[] cropIds) {
+        if (cropIds == null || cropIds.length == 0) {
+            return new int[]{-1, 0, 0}; // {mostFrequentId, maxCount, distinctCount}
+        }
+        Map<Integer, Integer> freq = new HashMap<>();
+        int mostFrequent = cropIds[0];
+        int maxCount = 0;
+
+        for (int id : cropIds) {
+            int count = freq.getOrDefault(id, 0) + 1;
+            freq.put(id, count);
+            if (count > maxCount) {
+                maxCount = count;
+                mostFrequent = id;
+            }
+        }
+        return new int[]{mostFrequent, maxCount, freq.size()};
+    }
+
+    // Milestone 2 (Week 4): Load a truck
+    // Technique: 0/1 Knapsack / Subset Sum DP | Time: O(n * C), Space: O(C)
+    public static int loadTruck(int[] weights, int capacity) {
+        if (weights == null || weights.length == 0 || capacity <= 0) {
+            return 0;
+        }
+        boolean[] dp = new boolean[capacity + 1];
+        dp[0] = true;
+
+        for (int w : weights) {
+            for (int c = capacity; c >= w; c--) {
+                if (dp[c - w]) {
+                    dp[c] = true;
+                }
+            }
+        }
+
+        for (int c = capacity; c >= 0; c--) {
+            if (dp[c]) {
+                return c;
+            }
+        }
+        return 0;
+    }
+
+    // Milestone 3 (Week 5): Best store-and-sell
+    // Technique: Kadane's variant (Running Minimum) | Time: O(n), Space: O(1)
+    public static int[] bestStoreAndSell(int[] prices) {
+        if (prices == null || prices.length < 2) {
+            return new int[]{0, -1, -1}; // {maxProfit, buyDay, sellDay}
+        }
+        int minPrice = prices[0];
+        int minDay = 0;
+        int maxProfit = 0;
+        int buyDay = 0;
+        int sellDay = 0;
+
+        for (int i = 1; i < prices.length; i++) {
+            int profit = prices[i] - minPrice;
+            if (profit > maxProfit) {
+                maxProfit = profit;
+                buyDay = minDay;
+                sellDay = i;
+            }
+            if (prices[i] < minPrice) {
+                minPrice = prices[i];
+                minDay = i;
+            }
+        }
+        return new int[]{maxProfit, buyDay, sellDay};
+    }
+
+    // Milestone 4 (Week 6): Merge two mandis
+    // Technique: Two Pointers | Time: O(n + m), Space: O(n + m)
+    public static int[] mergeMandis(int[] mandiA, int[] mandiB) {
+        int n = (mandiA == null) ? 0 : mandiA.length;
+        int m = (mandiB == null) ? 0 : mandiB.length;
+        int[] merged = new int[n + m];
+
+        int i = 0, j = 0, k = 0;
+        while (i < n && j < m) {
+            if (mandiA[i] <= mandiB[j]) {
+                merged[k++] = mandiA[i++];
+            } else {
+                merged[k++] = mandiB[j++];
+            }
+        }
+        while (i < n) merged[k++] = mandiA[i++];
+        while (j < m) merged[k++] = mandiB[j++];
+
+        return merged;
+    }
+
+    // Milestone 5 (Week 8): Price on a date
+    // Technique: Binary Search (Lower Bound) | Time: O(log n), Space: O(1)
+    public static int findDateIndex(int[] sortedDates, int targetDate) {
+        if (sortedDates == null || sortedDates.length == 0) {
+            return -1;
+        }
+        int low = 0;
+        int high = sortedDates.length;
+
+        while (low < high) {
+            int mid = low + (high - low) / 2;
+            if (sortedDates[mid] < targetDate) {
+                low = mid + 1;
+            } else {
+                high = mid;
+            }
+        }
+        return low; // Returns index of first element >= targetDate
+    }
+
+    // Milestone 6 (Week 12): Days until a better price
+    // Technique: Monotonic Stack | Time: O(n), Space: O(n)
+    public static int[] daysUntilBetterPrice(int[] prices) {
+        if (prices == null || prices.length == 0) {
+            return new int[0];
+        }
+        int n = prices.length;
+        int[] waitDays = new int[n];
+        Deque<Integer> stack = new ArrayDeque<>(); // Stores indices
+
+        for (int i = 0; i < n; i++) {
+            while (!stack.isEmpty() && prices[i] > prices[stack.peek()]) {
+                int prevDay = stack.pop();
+                waitDays[prevDay] = i - prevDay;
+            }
+            stack.push(i);
+        }
+        return waitDays;
+    }
+
+    // Single main runner verifying all worked examples
+    public static void main(String[] args) {
+        // Test 1: Most traded crop
+        int[] crops = {2, 5, 2, 7, 5, 2, 1};
+        int[] res1 = mostTradedCrop(crops);
+        System.out.printf("M1: most frequent=%d (count %d), distinct=%d%n", res1[0], res1[1], res1[2]);
+
+        // Test 2: Load a truck
+        int[] weights = {350, 420, 280, 160, 510};
+        int res2 = loadTruck(weights, 1000);
+        System.out.printf("M2: %d%n", res2);
+
+        // Test 3: Best store-and-sell
+        int[] tomatoPrices = {1800, 1650, 1700, 2100, 1900, 2400, 2250};
+        int[] res3 = bestStoreAndSell(tomatoPrices);
+        System.out.printf("M3: profit=%d (buy day %d, sell day %d)%n", res3[0], res3[1], res3[2]);
+
+        // Test 4: Merge two mandis
+        int[] mandiA = {1, 4, 6, 9};
+        int[] mandiB = {2, 3, 7, 10};
+        int[] res4 = mergeMandis(mandiA, mandiB);
+        System.out.println("M4: " + Arrays.toString(res4));
+
+        // Test 5: Price on a date
+        int res5 = findDateIndex(res4, 7);
+        System.out.printf("M5: %d%n", res5);
+
+        // Test 6: Days until a better price
+        int[] res6 = daysUntilBetterPrice(tomatoPrices);
+        System.out.println("M6: " + Arrays.toString(res6));
+    }
+}
